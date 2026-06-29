@@ -645,7 +645,7 @@
     }
 
     /* ══════════════════════════════════════════════════════════
-       GALLERY
+       GALLERY / SLIDESHOW
     ══════════════════════════════════════════════════════════ */
     #gallery {
       padding: var(--section-gap) 0;
@@ -658,63 +658,223 @@
     }
     .gallery-header .red-line { margin: 0 auto 28px; }
 
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-    }
-
-    .gallery-item {
-      background: var(--card);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 12px;
-      cursor: pointer;
-      overflow: hidden;
+    /* ── Slideshow wrapper ── */
+    .slideshow {
       position: relative;
-      transition: border-color 0.3s;
-      aspect-ratio: 4/3;
+      width: 100%;
+      height: 620px;
+      overflow: hidden;
+      background: #000;
     }
 
-    .gallery-item:hover { border-color: var(--red); }
-
-    .gallery-item img {
+    /* Each slide */
+    .slide {
       position: absolute;
       inset: 0;
+      opacity: 0;
+      transition: opacity 0.9s cubic-bezier(0.4,0,0.2,1), transform 1.1s cubic-bezier(0.4,0,0.2,1);
+      transform: scale(1.04);
+      pointer-events: none;
+    }
+    .slide.active {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+      z-index: 2;
+    }
+    .slide.prev {
+      opacity: 0;
+      transform: scale(0.98);
+      z-index: 1;
+    }
+
+    .slide img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: center;
       display: block;
-      transition: transform 0.5s ease;
-    }
-    .gallery-item:hover img { transform: scale(1.06); }
-
-    .gallery-icon {
-      width: 48px;
-      height: 48px;
-      color: rgba(255,255,255,0.15);
+      image-rendering: -webkit-optimize-contrast;
     }
 
-    .gallery-placeholder-text {
+    /* Dark gradient overlay on each slide */
+    .slide-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to right,
+        rgba(0,0,0,0.72) 0%,
+        rgba(0,0,0,0.2) 50%,
+        rgba(0,0,0,0.05) 100%
+      );
+      z-index: 1;
+    }
+
+    /* Slide caption */
+    .slide-caption {
+      position: absolute;
+      bottom: 60px;
+      left: 60px;
+      z-index: 3;
+      transform: translateY(16px);
+      opacity: 0;
+      transition: transform 0.7s 0.3s ease, opacity 0.7s 0.3s ease;
+    }
+    .slide.active .slide-caption {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .slide-num {
+      font-family: var(--font-display);
+      font-size: 13px;
+      letter-spacing: 4px;
+      color: var(--red);
+      margin-bottom: 10px;
+    }
+
+    .slide-car {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 5vw, 60px);
+      letter-spacing: 3px;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+    }
+
+    .slide-tag {
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 3px;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.55);
     }
 
-    .gallery-item .hover-overlay {
+    /* Red accent bar on slide */
+    .slide-accent {
       position: absolute;
-      inset: 0;
-      background: rgba(204,0,0,0.08);
-      opacity: 0;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--red);
+      z-index: 3;
+      transform: scaleY(0);
+      transform-origin: top;
+      transition: transform 0.6s 0.1s ease;
+    }
+    .slide.active .slide-accent { transform: scaleY(1); }
+
+    /* Progress bar */
+    .slide-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: var(--red);
+      z-index: 10;
+      width: 0%;
+      transition: width linear;
+    }
+
+    /* Nav arrows */
+    .slide-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 56px;
+      height: 56px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+      backdrop-filter: blur(6px);
+    }
+    .slide-arrow:hover {
+      background: var(--red);
+      border-color: var(--red);
+      transform: translateY(-50%) scale(1.08);
+    }
+    .slide-arrow svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .slide-arrow.prev-btn { left: 24px; }
+    .slide-arrow.next-btn { right: 24px; }
+
+    /* Dot indicators */
+    .slide-dots {
+      position: absolute;
+      bottom: 28px;
+      right: 40px;
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+    .dot {
+      width: 28px;
+      height: 3px;
+      background: rgba(255,255,255,0.25);
+      cursor: pointer;
+      transition: background 0.3s, width 0.3s;
+    }
+    .dot.active {
+      background: var(--red);
+      width: 44px;
+    }
+
+    /* Thumbnail strip */
+    .slide-thumbs {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .thumb {
+      flex: 1;
+      height: 70px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      opacity: 0.45;
       transition: opacity 0.3s;
     }
-    .gallery-item:hover .hover-overlay { opacity: 1; }
+    .thumb.active { opacity: 1; }
+    .thumb::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .thumb.active::after { border-color: var(--red); }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    @media (max-width: 768px) {
+      .slideshow { height: 420px; }
+      .slide-caption { left: 24px; bottom: 48px; }
+      .slide-arrow { width: 44px; height: 44px; }
+      .slide-arrow.prev-btn { left: 12px; }
+      .slide-arrow.next-btn { right: 12px; }
+      .slide-thumbs { display: none; }
+    }
 
     /* ══════════════════════════════════════════════════════════
        REVIEWS
@@ -1071,9 +1231,7 @@
       .why-visual { height: 280px; }
       .why-big-text { font-size: 64px; }
 
-      .gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .slideshow { height: 500px; }
 
       .location-inner { grid-template-columns: 1fr; }
 
@@ -1090,9 +1248,7 @@
 
       .hero-stats { flex-wrap: wrap; gap: 32px; }
 
-      .gallery-grid {
-        grid-template-columns: 1fr 1fr;
-      }
+      .slideshow { height: 360px; }
 
       .contact-top { grid-template-columns: 1fr; }
       .footer-brand { grid-column: auto; }
@@ -1342,41 +1498,97 @@
         <h2 class="section-title reveal">PHOTO GALLERY</h2>
         <p class="section-sub reveal" style="margin: 0 auto;">Showcasing our craftsmanship — from glossy full wraps to flawless ceramic finishes.</p>
       </div>
+    </div>
 
-      <div class="gallery-grid">
-        <!-- Urus — spans 2 cols -->
-        <div class="gallery-item reveal" style="transition-delay:0s">
-          <div class="hover-overlay"></div>
-          <img src="image-1782763099422.jpg" alt="White Lamborghini Urus — BlackLabel Customs" />
-        </div>
-        <!-- G-Wagon -->
-        <div class="gallery-item reveal" style="transition-delay:0.08s">
-          <div class="hover-overlay"></div>
-          <img src="image-1782763106324.jpg" alt="White Mercedes G-Wagon — BlackLabel Customs" />
-        </div>
-        <!-- BMW M3 -->
-        <div class="gallery-item reveal" style="transition-delay:0.16s">
-          <div class="hover-overlay"></div>
-          <img src="image-1782763116082.jpg" alt="Blue BMW M3 — BlackLabel Customs" />
-        </div>
-        <!-- Corvette -->
-        <div class="gallery-item reveal" style="transition-delay:0.24s">
-          <div class="hover-overlay"></div>
-          <img src="image-1782763122517.jpg" alt="Orange C8 Corvette — BlackLabel Customs" />
-        </div>
-        <!-- Escalade — spans 2 cols -->
-        <div class="gallery-item reveal" style="transition-delay:0.32s">
-          <div class="hover-overlay"></div>
-          <img src="image-1782763128174.jpg" alt="White Cadillac Escalade — BlackLabel Customs" />
-        </div>
-        <!-- Slot 6 placeholder -->
-        <div class="gallery-item reveal" style="transition-delay:0.4s">
-          <div class="hover-overlay"></div>
-          <svg class="gallery-icon" viewBox="0 0 48 48" fill="currentColor"><rect x="6" y="10" width="36" height="28" rx="3" opacity="0.3"/><path d="M6 32l10-10 6 6 8-10 12 12" opacity="0.5"/><circle cx="16" cy="18" r="4" opacity="0.5"/></svg>
-          <span class="gallery-placeholder-text">More Coming Soon</span>
+    <!-- Full-width slideshow (outside container for edge-to-edge) -->
+    <div class="slideshow reveal" id="slideshow">
+
+      <!-- Slides -->
+      <div class="slide active" data-index="0">
+        <img src="image-1782763099422.jpg" alt="White Lamborghini Urus" />
+        <div class="slide-overlay"></div>
+        <div class="slide-accent"></div>
+        <div class="slide-caption">
+          <div class="slide-num">01 / 05</div>
+          <div class="slide-car">LAMBORGHINI<br/>URUS</div>
+          <div class="slide-tag">BlackLabel Customs · Detroit</div>
         </div>
       </div>
+
+      <div class="slide" data-index="1">
+        <img src="image-1782763106324.jpg" alt="White Mercedes G-Wagon" />
+        <div class="slide-overlay"></div>
+        <div class="slide-accent"></div>
+        <div class="slide-caption">
+          <div class="slide-num">02 / 05</div>
+          <div class="slide-car">MERCEDES<br/>G-WAGON</div>
+          <div class="slide-tag">BlackLabel Customs · Detroit</div>
+        </div>
+      </div>
+
+      <div class="slide" data-index="2">
+        <img src="image-1782763116082.jpg" alt="Blue BMW M3" />
+        <div class="slide-overlay"></div>
+        <div class="slide-accent"></div>
+        <div class="slide-caption">
+          <div class="slide-num">03 / 05</div>
+          <div class="slide-car">BMW<br/>M3</div>
+          <div class="slide-tag">BlackLabel Customs · Detroit</div>
+        </div>
+      </div>
+
+      <div class="slide" data-index="3">
+        <img src="image-1782763122517.jpg" alt="Orange C8 Corvette" />
+        <div class="slide-overlay"></div>
+        <div class="slide-accent"></div>
+        <div class="slide-caption">
+          <div class="slide-num">04 / 05</div>
+          <div class="slide-car">CHEVROLET<br/>CORVETTE</div>
+          <div class="slide-tag">BlackLabel Customs · Detroit</div>
+        </div>
+      </div>
+
+      <div class="slide" data-index="4">
+        <img src="image-1782763128174.jpg" alt="White Cadillac Escalade" />
+        <div class="slide-overlay"></div>
+        <div class="slide-accent"></div>
+        <div class="slide-caption">
+          <div class="slide-num">05 / 05</div>
+          <div class="slide-car">CADILLAC<br/>ESCALADE</div>
+          <div class="slide-tag">BlackLabel Customs · Detroit</div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="slide-progress" id="slideProgress"></div>
+
+      <!-- Arrows -->
+      <button class="slide-arrow prev-btn" id="prevBtn" aria-label="Previous">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="slide-arrow next-btn" id="nextBtn" aria-label="Next">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <!-- Dots -->
+      <div class="slide-dots">
+        <div class="dot active" data-dot="0"></div>
+        <div class="dot" data-dot="1"></div>
+        <div class="dot" data-dot="2"></div>
+        <div class="dot" data-dot="3"></div>
+        <div class="dot" data-dot="4"></div>
+      </div>
     </div>
+
+    <!-- Thumbnail strip -->
+    <div class="slide-thumbs" id="thumbs">
+      <div class="thumb active" data-thumb="0"><img src="image-1782763099422.jpg" alt="Urus" /></div>
+      <div class="thumb" data-thumb="1"><img src="image-1782763106324.jpg" alt="G-Wagon" /></div>
+      <div class="thumb" data-thumb="2"><img src="image-1782763116082.jpg" alt="BMW M3" /></div>
+      <div class="thumb" data-thumb="3"><img src="image-1782763122517.jpg" alt="Corvette" /></div>
+      <div class="thumb" data-thumb="4"><img src="image-1782763128174.jpg" alt="Escalade" /></div>
+    </div>
+
   </section>
 
   <!-- ══ REVIEWS ══════════════════════════════════════════════ -->
@@ -1630,6 +1842,72 @@
         row.classList.add('today');
       }
     });
+
+    // ── Slideshow ────────────────────────────────────────────
+    (function() {
+      const slides = document.querySelectorAll('.slide');
+      const dots   = document.querySelectorAll('.dot');
+      const thumbs = document.querySelectorAll('.thumb');
+      const progress = document.getElementById('slideProgress');
+      const DURATION = 5000;
+      let current = 0;
+      let timer = null;
+      let progressTimer = null;
+
+      function goTo(index) {
+        slides[current].classList.remove('active');
+        slides[current].classList.add('prev');
+        dots[current].classList.remove('active');
+        thumbs[current].classList.remove('active');
+        setTimeout(() => slides[index - 1 < 0 ? slides.length - 1 : current].classList.remove('prev'), 1000);
+
+        current = (index + slides.length) % slides.length;
+        slides[current].classList.add('active');
+        dots[current].classList.add('active');
+        thumbs[current].classList.add('active');
+        startProgress();
+      }
+
+      function next() { goTo(current + 1); }
+      function prev() { goTo(current - 1); }
+
+      function startProgress() {
+        clearInterval(progressTimer);
+        clearTimeout(timer);
+        if (progress) {
+          progress.style.transition = 'none';
+          progress.style.width = '0%';
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              progress.style.transition = `width ${DURATION}ms linear`;
+              progress.style.width = '100%';
+            });
+          });
+        }
+        timer = setTimeout(next, DURATION);
+      }
+
+      document.getElementById('nextBtn').addEventListener('click', () => { clearTimeout(timer); next(); });
+      document.getElementById('prevBtn').addEventListener('click', () => { clearTimeout(timer); prev(); });
+
+      dots.forEach(d => d.addEventListener('click', () => { clearTimeout(timer); goTo(+d.dataset.dot); }));
+      thumbs.forEach(t => t.addEventListener('click', () => { clearTimeout(timer); goTo(+t.dataset.thumb); }));
+
+      // Pause on hover
+      const ss = document.getElementById('slideshow');
+      ss.addEventListener('mouseenter', () => { clearTimeout(timer); if(progress) { progress.style.transition = 'none'; } });
+      ss.addEventListener('mouseleave', () => startProgress());
+
+      // Touch swipe
+      let touchX = 0;
+      ss.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+      ss.addEventListener('touchend', e => {
+        const diff = touchX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) { clearTimeout(timer); diff > 0 ? next() : prev(); }
+      }, { passive: true });
+
+      startProgress();
+    })();
 
     // ── Smooth scroll for anchor links ──────────────────────
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
